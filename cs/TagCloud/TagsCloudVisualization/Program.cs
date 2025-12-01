@@ -8,8 +8,10 @@ class Program
     static void Main()
     {
         var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualization/out");
-        var cloudVisualizer = new TagCloudVisualizer(dir.FullName);
-        var cloudGenerator = new TagCloudGenerator(cloudVisualizer);
+        var visualizer = new TagCloudVisualizer(dir.FullName);
+        var sizeProvider = new RandomRectangleSizeProvider();
+        var layouterFactory = (Point center) => new CircularCloudLayouter(center);
+        var tagCloudGenerator = new TagCloudGenerator(visualizer, layouterFactory, sizeProvider);
 
         Console.WriteLine("Generating tag cloud visualizations...");
         
@@ -41,7 +43,7 @@ class Program
             )
         };
         
-        var results = cloudGenerator.GenerateMultiple(configs);
+        var results = tagCloudGenerator.GenerateMultiple(configs);
         
         foreach (var result in results)
         {

@@ -4,34 +4,29 @@ namespace TagsCloudVisualization;
 
 public class TagCloudGenerator
 {
-    private readonly TagCloudVisualizer _cloudVisualizer;
+    private readonly TagCloudVisualizer _visualizer;
     private readonly Func<Point, ILayouter> _layouterFactory;
-    private readonly Random _random;
+    private readonly IRectangleSizeProvider _sizeProvider;
 
-    public TagCloudGenerator(TagCloudVisualizer cloudVisualizer)
+    public TagCloudGenerator(
+        TagCloudVisualizer visualizer,
+        Func<Point, ILayouter> layouterFactory,
+        IRectangleSizeProvider sizeProvider)
     {
-        _cloudVisualizer = cloudVisualizer;
-        _layouterFactory = center => new CircularCloudLayouter(center);
-        _random = new Random();
-    }
-
-    public TagCloudGenerator(TagCloudVisualizer cloudVisualizer, Func<Point, ILayouter> layouterFactory)
-    {
-        _cloudVisualizer = cloudVisualizer;
-        _layouterFactory = layouterFactory;
-        _random = new Random();
+        _visualizer = visualizer ?? throw new ArgumentNullException(nameof(visualizer));
+        _layouterFactory = layouterFactory ?? throw new ArgumentNullException(nameof(layouterFactory));
+        _sizeProvider = sizeProvider ?? throw new ArgumentNullException(nameof(sizeProvider));
     }
 
     public string Generate(TagCloudGenerationConfig config)
     {
         var layouter = _layouterFactory(config.Center);
-        
-        var sizes = GenerateSizes(config.RectangleCount, config.MinSize, config.MaxSize);
+        var sizes = _sizeProvider.GetSizes(config.RectangleCount, config.MinSize, config.MaxSize);
         
         foreach (var size in sizes)
             layouter.PutNextRectangle(size);
         
-        return _cloudVisualizer.SaveLayoutVisualization(
+        return _visualizer.SaveLayoutVisualization(
             rectangles: layouter.PlacedRectangles, 
             center: config.Center, 
             fileName: config.OutputFileName,
@@ -57,26 +52,5 @@ public class TagCloudGenerator
         }
         
         return results;
-    }
-
-    private List<Size> GenerateSizes(int count, Size minSize, Size maxSize)
-    {
-        if (count <= 0)
-            throw new ArgumentException("Count must be positive", nameof(count));
-        
-        if (minSize.Width <= 0 || minSize.Height <= 0)
-            throw new ArgumentException("Min size must have positive dimensions", nameof(minSize));
-        
-        if (maxSize.Width < minSize.Width || maxSize.Height < minSize.Height)
-            throw new ArgumentException("Max size must be greater than or equal to min size", nameof(maxSize));
-
-        var sizes = new List<Size>();
-        for (var i = 0; i < count; i++)
-        {
-            var width = _random.Next(minSize.Width, maxSize.Width + 1);
-            var height = _random.Next(minSize.Height, maxSize.Height + 1);
-            sizes.Add(new Size(width, height));
-        }
-        return sizes;
     }
 }
