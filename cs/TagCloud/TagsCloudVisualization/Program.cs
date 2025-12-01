@@ -6,9 +6,8 @@ class Program
 {
     static void Main()
     {
-        var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualization/out");
-        
-        var visualizer = new TagCloudVisualizer(new ImageSaver(dir.FullName));
+        var imageSaver = new ImageSaver();
+        var visualizer = new TagCloudVisualizer(imageSaver);
         var sizeProvider = new RandomRectangleSizeProvider();
         var layouterFactory = (Point center) => new CircularCloudLayouter(center);
         

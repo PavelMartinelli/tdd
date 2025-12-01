@@ -1,16 +1,16 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
+using System.Reflection;
 
 namespace TagsCloudVisualization;
 
 public class ImageSaver : IImageSaver
 {
-    private readonly string _outputDirectory;
+    private readonly string _relativeOutputDirectory;
 
-    public ImageSaver(string outputDirectory)
+    public ImageSaver(string relativeOutputDirectory = "out")
     {
-        _outputDirectory = outputDirectory ?? throw new ArgumentNullException(nameof(outputDirectory));
-        Directory.CreateDirectory(_outputDirectory);
+        _relativeOutputDirectory = relativeOutputDirectory;
     }
     
     public string GenerateFileName(string baseName)
@@ -25,10 +25,29 @@ public class ImageSaver : IImageSaver
 
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("File name cannot be empty", nameof(fileName));
-            
-        var filePath = Path.Combine(_outputDirectory, fileName);
+        
+        var projectDir = GetProjectDirectory();
+        var outputDir = Path.Combine(projectDir, _relativeOutputDirectory);
+        Directory.CreateDirectory(outputDir);
+        
+        var filePath = Path.Combine(outputDir, fileName);
         bitmap.Save(filePath, format ?? ImageFormat.Png);
         
         return Path.GetFullPath(filePath);
+    }
+
+    private string GetProjectDirectory()
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var currentDir = baseDir;
+        while (currentDir != null)
+        {
+            if (Directory.GetFiles(currentDir, "*.csproj").Any())
+                return currentDir;
+            var parent = Directory.GetParent(currentDir);
+            currentDir = parent?.FullName;
+        }
+        
+        return baseDir;
     }
 }

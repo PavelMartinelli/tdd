@@ -19,7 +19,7 @@ public class CircularCloudLayouter : ILayouter
         _minDimension = int.MaxValue;
     }
 
-    public IEnumerable<Rectangle> PlacedRectangles => _placedRectangles.AsReadOnly();
+    public IReadOnlyList<Rectangle> PlacedRectangles => _placedRectangles.AsReadOnly();
 
     public Rectangle PutNextRectangle(Size rectangleSize)
     {

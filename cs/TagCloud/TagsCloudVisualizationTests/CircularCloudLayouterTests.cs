@@ -17,8 +17,7 @@ public class CircularCloudLayouterTests
     {
         center = new Point(100, 100);
         layouter = new CircularCloudLayouter(center);
-        var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualizationTests/test_results");
-        imageSaver = new ImageSaver(dir.FullName);
+        imageSaver = new ImageSaver("test_results");
         testVisualizer = new TagCloudVisualizer(imageSaver);
     }
     
@@ -65,7 +64,7 @@ public class CircularCloudLayouterTests
         for (var i = 0; i < 5; i++)
             layouter.PutNextRectangle(new Size(45, 15));
         
-        var rectangles = layouter.PlacedRectangles.ToList();
+        var rectangles = layouter.PlacedRectangles;
         rectangles.Should().NotBeEmpty();
         
         for (var i = 0; i < rectangles.Count; i++)
@@ -92,12 +91,41 @@ public class CircularCloudLayouterTests
     }
     
     [Test]
-    public void PutNextRectangle_ManyRectangles_FormsCircularShape()
+    public void PutNextRectangle_ManyRectangles_RectanglesInAllQuadrants()
+    {
+        for (var i = 0; i < 150; i++)
+            layouter.PutNextRectangle(new Size(45, 15));
+
+        var rectangles = layouter.PlacedRectangles;
+        
+        var quadrants = new int[4];
+
+        foreach (var rect in rectangles)
+        {
+            var rectCenter = new Point(rect.X + rect.Width / 2,
+                rect.Y + rect.Height / 2);
+
+            if (rectCenter.X >= center.X && rectCenter.Y <= center.Y)
+                quadrants[0]++;
+            else if (rectCenter.X >= center.X && rectCenter.Y > center.Y)
+                quadrants[1]++;
+            else if (rectCenter.X < center.X && rectCenter.Y > center.Y)
+                quadrants[2]++;
+            else
+                quadrants[3]++;
+        }
+        
+        quadrants.All(count => count > 0).Should().BeTrue(
+            "Прямоугольники должны распределиться по всем квадрантам, образуя круглую форму");
+    }
+
+    [Test]
+    public void PutNextRectangle_ManyRectangles_DistributionIsRelativelyUniform()
     {
         for (var i = 0; i < 150; i++)
             layouter.PutNextRectangle(new Size(45, 15));
         
-        var rectangles = layouter.PlacedRectangles.ToList();
+        var rectangles = layouter.PlacedRectangles;
         
         var quadrants = new int[4];
     
@@ -115,11 +143,13 @@ public class CircularCloudLayouterTests
                 quadrants[3]++;
         }
         
-        quadrants.All(count => count > 0).Should().BeTrue();
-        
         var maxCount = quadrants.Max();
         var minCount = quadrants.Min();
-        (maxCount <= minCount * 2).Should().BeTrue();
+        
+        (maxCount <= minCount * 2).Should().BeTrue("Распределение по квадрантам должно быть относительно равномерным");
+        
+        TestContext.Out.WriteLine($"Распределение по квадрантам: [{string.Join(", ", quadrants)}]");
+        TestContext.Out.WriteLine($"Максимум: {maxCount}, Минимум: {minCount}, Отношение: {(double)maxCount / minCount:F2}");
     }
 
     private double CalculateBoundingCircleRadius()
