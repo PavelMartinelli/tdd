@@ -10,6 +10,7 @@ public class CircularCloudLayouterTests
     private ILayouter layouter;
     private Point center;
     private TagCloudVisualizer testVisualizer;
+    private IImageSaver imageSaver;
 
     [SetUp]
     public void SetUp()
@@ -17,7 +18,10 @@ public class CircularCloudLayouterTests
         center = new Point(100, 100);
         layouter = new CircularCloudLayouter(center);
         var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualizationTests/test_results");
-        testVisualizer = new TagCloudVisualizer(dir.FullName);
+        imageSaver = new ImageSaver(dir.FullName);
+        var visualizerConfig = TagCloudVisualizeConfig.Default;
+        testVisualizer = new TagCloudVisualizer(visualizerConfig, imageSaver);
+        
     }
     
     [TearDown]
@@ -28,8 +32,8 @@ public class CircularCloudLayouterTests
         try
         {
             var testName = TestContext.CurrentContext.Test.Name;
-            var fileName = testVisualizer.GenerateFileName(testName);
-            var filePath = testVisualizer.SaveLayoutVisualization(
+            var fileName = imageSaver.GenerateFileName(testName);
+            var filePath = testVisualizer.SaveVisualization(
                 layouter.PlacedRectangles, 
                 center, 
                 fileName

@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using TagsCloudVisualization;
 
 namespace TagsCloudVisualization.ConsoleApp;
 
@@ -8,10 +7,20 @@ class Program
     static void Main()
     {
         var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualization/out");
-        var visualizer = new TagCloudVisualizer(dir.FullName);
+        
+        var visualizerConfig = new TagCloudVisualizeConfig(
+            backgroundColor: Color.White,
+            rectangleColor: Color.Blue,
+            centerColor: Color.Red);
+        
+        var visualizer = new TagCloudVisualizer(visualizerConfig, new ImageSaver(dir.FullName) );
         var sizeProvider = new RandomRectangleSizeProvider();
         var layouterFactory = (Point center) => new CircularCloudLayouter(center);
-        var tagCloudGenerator = new TagCloudGenerator(visualizer, layouterFactory, sizeProvider);
+        
+        var tagCloudGenerator = new TagCloudGenerator(
+            visualizer,
+            layouterFactory,
+            sizeProvider);
 
         Console.WriteLine("Generating tag cloud visualizations...");
         

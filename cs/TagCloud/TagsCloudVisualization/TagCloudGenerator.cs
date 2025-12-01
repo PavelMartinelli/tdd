@@ -4,12 +4,12 @@ namespace TagsCloudVisualization;
 
 public class TagCloudGenerator
 {
-    private readonly TagCloudVisualizer _visualizer;
+    private readonly IVisualizer _visualizer;
     private readonly Func<Point, ILayouter> _layouterFactory;
     private readonly IRectangleSizeProvider _sizeProvider;
 
     public TagCloudGenerator(
-        TagCloudVisualizer visualizer,
+        IVisualizer visualizer,
         Func<Point, ILayouter> layouterFactory,
         IRectangleSizeProvider sizeProvider)
     {
@@ -26,11 +26,11 @@ public class TagCloudGenerator
         foreach (var size in sizes)
             layouter.PutNextRectangle(size);
         
-        return _visualizer.SaveLayoutVisualization(
-            rectangles: layouter.PlacedRectangles, 
-            center: config.Center, 
+        return _visualizer.SaveVisualization(
+            rectangles: layouter.PlacedRectangles,
+            center: config.Center,
             fileName: config.OutputFileName,
-            customImageSize: config.ImageSize
+            imageSize: config.ImageSize
         );
     }
 
