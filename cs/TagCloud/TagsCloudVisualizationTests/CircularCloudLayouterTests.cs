@@ -7,7 +7,7 @@ namespace TagsCloudVisualization.Tests;
 [TestFixture]
 public class CircularCloudLayouterTests
 {
-    private CircularCloudLayouter layouter;
+    private ILayouter layouter;
     private Point center;
     private TagCloudVisualizer testVisualizer;
 

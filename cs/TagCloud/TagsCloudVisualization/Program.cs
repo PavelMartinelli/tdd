@@ -9,7 +9,7 @@ class Program
     {
         var dir = Directory.CreateDirectory($"../../../../TagsCloudVisualization/out");
         var cloudVisualizer = new TagCloudVisualizer(dir.FullName);
-        var cloudGenerator = new GeneratorTagCloud(cloudVisualizer);
+        var cloudGenerator = new TagCloudGenerator(cloudVisualizer);
 
         Console.WriteLine("Generating tag cloud visualizations...");
         

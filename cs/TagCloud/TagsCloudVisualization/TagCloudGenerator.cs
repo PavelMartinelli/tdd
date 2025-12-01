@@ -2,16 +2,23 @@
 
 namespace TagsCloudVisualization;
 
-public class GeneratorTagCloud
+public class TagCloudGenerator
 {
     private readonly TagCloudVisualizer _cloudVisualizer;
-    private readonly Func<Point, CircularCloudLayouter> _layouterFactory;
+    private readonly Func<Point, ILayouter> _layouterFactory;
     private readonly Random _random;
 
-    public GeneratorTagCloud(TagCloudVisualizer cloudVisualizer)
+    public TagCloudGenerator(TagCloudVisualizer cloudVisualizer)
     {
         _cloudVisualizer = cloudVisualizer;
         _layouterFactory = center => new CircularCloudLayouter(center);
+        _random = new Random();
+    }
+
+    public TagCloudGenerator(TagCloudVisualizer cloudVisualizer, Func<Point, ILayouter> layouterFactory)
+    {
+        _cloudVisualizer = cloudVisualizer;
+        _layouterFactory = layouterFactory;
         _random = new Random();
     }
 

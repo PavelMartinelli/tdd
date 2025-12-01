@@ -1,24 +1,21 @@
 ﻿using System.Drawing;
+using TagsCloudVisualization;
 
-namespace TagsCloudVisualization;
-
-public class CircularCloudLayouter
+public class CircularCloudLayouter : ILayouter
 {
-    private const double AngleStep = 0.05;
-    private const double RadiusStepFactor = 0.05;
-    
     private readonly Point _center;
     private readonly List<Rectangle> _placedRectangles;
-    private double _currentRadius;
-    private double _currentAngle;
+    private readonly ISpiralPointsProvider _pointsProvider;
     private int _minDimension;
 
-    public CircularCloudLayouter(Point center)
+    public CircularCloudLayouter(Point center) : this(center, new SpiralPointsProvider())
+    { }
+
+    public CircularCloudLayouter(Point center, ISpiralPointsProvider pointsProvider)
     {
         _center = center;
         _placedRectangles = new List<Rectangle>();
-        _currentRadius = 0;
-        _currentAngle = 0;
+        _pointsProvider = pointsProvider;
         _minDimension = int.MaxValue;
     }
 
@@ -31,7 +28,7 @@ public class CircularCloudLayouter
 
         UpdateMinDimension(rectangleSize);
         
-        foreach (var point in GetSpiralPoints())
+        foreach (var point in _pointsProvider.GetSpiralPoints(_center, _minDimension))
         {
             var candidateRectangle = CreateRectangleAtPoint(rectangleSize, point);
 
@@ -62,67 +59,43 @@ public class CircularCloudLayouter
 
     private void CompactRectangle(ref Rectangle rectangle)
     {
-        var canMoveX = true;
-        var canMoveY = true;
+        var canMove = true;
 
-        while ((canMoveX || canMoveY) && !IntersectsWithAny(rectangle))
+        while (canMove && !IntersectsWithAny(rectangle))
         {
-            canMoveX = TryMoveTowardsCenterX(ref rectangle);
-            canMoveY = TryMoveTowardsCenterY(ref rectangle);
+            var movedX = TryMoveTowardsCenter(ref rectangle, Axis.X);
+            var movedY = TryMoveTowardsCenter(ref rectangle, Axis.Y);
+            canMove = movedX || movedY;
         }
     }
 
-    private bool TryMoveTowardsCenterX(ref Rectangle rectangle)
+    private bool TryMoveTowardsCenter(ref Rectangle rectangle, Axis axis)
     {
-        var centerX = rectangle.X + rectangle.Width / 2;
-        var direction = Math.Sign(_center.X - centerX);
+        var centerCoord = axis == Axis.X ? rectangle.X + rectangle.Width / 2 : rectangle.Y + rectangle.Height / 2;
+        
+        var targetCoord = axis == Axis.X ? _center.X : _center.Y;
+        var direction = Math.Sign(targetCoord - centerCoord);
 
         if (direction == 0)
             return false;
 
         var movedRectangle = rectangle;
-        movedRectangle.X += direction;
+        if (axis == Axis.X)
+            movedRectangle.X += direction;
+        else
+            movedRectangle.Y += direction;
 
         if (IntersectsWithAny(movedRectangle)) 
             return false;
         
         rectangle = movedRectangle;
         return true;
-    }
-
-    private bool TryMoveTowardsCenterY(ref Rectangle rectangle)
-    {
-        var centerY = rectangle.Y + rectangle.Height / 2;
-        var direction = Math.Sign(_center.Y - centerY);
-
-        if (direction == 0)
-            return false;
-
-        var movedRectangle = rectangle;
-        movedRectangle.Y += direction;
-
-        if (IntersectsWithAny(movedRectangle)) 
-            return false;
-        
-        rectangle = movedRectangle;
-        return true;
-    }
-
-    private IEnumerable<Point> GetSpiralPoints()
-    {
-        while (true)
-        {
-            var point = PolarMath.PolarToCartesian(_currentRadius, _currentAngle, _center);
-            
-            _currentAngle += AngleStep;
-            _currentRadius += _minDimension * RadiusStepFactor;
-
-            yield return point;
-        }
     }
 
     private bool IntersectsWithAny(Rectangle rectangle)
     {
         return _placedRectangles.Any(rect => rect.IntersectsWith(rectangle));
     }
+
+    private enum Axis { X, Y }
 }
