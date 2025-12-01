@@ -16,7 +16,7 @@ public class ImageSaver : IImageSaver
     public string GenerateFileName(string baseName)
     {
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        return $"{baseName}_{timestamp}";
+        return $"{baseName}_{timestamp}.png";
     }
 
     public string SaveBitmap(Bitmap bitmap, string fileName, ImageFormat format = null)

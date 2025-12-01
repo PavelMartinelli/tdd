@@ -18,36 +18,43 @@ public class TagCloudGenerator
         _sizeProvider = sizeProvider ?? throw new ArgumentNullException(nameof(sizeProvider));
     }
 
-    public string Generate(TagCloudGenerationConfig config)
+    public string Generate(TagCloudGenerationConfig generationConfig, TagCloudVisualizationConfig visualizationConfig)
     {
-        var layouter = _layouterFactory(config.Center);
-        var sizes = _sizeProvider.GetSizes(config.RectangleCount, config.MinSize, config.MaxSize);
+        var layouter = _layouterFactory(generationConfig.Center);
+        var sizes = _sizeProvider.GetSizes(generationConfig.RectangleCount, generationConfig.MinSize, generationConfig.MaxSize);
         
         foreach (var size in sizes)
             layouter.PutNextRectangle(size);
         
         return _visualizer.SaveVisualization(
             rectangles: layouter.PlacedRectangles,
-            center: config.Center,
-            fileName: config.OutputFileName,
-            imageSize: config.ImageSize
+            center: generationConfig.Center,
+            config: visualizationConfig
         );
     }
-
-    public List<string> GenerateMultiple(IEnumerable<TagCloudGenerationConfig> configs)
+    
+    
+    public List<string> GenerateMultiple(
+        List<TagCloudGenerationConfig> generationConfigs,
+        List<TagCloudVisualizationConfig> visualizationConfigs)
     {
+
+        if (generationConfigs.Count != visualizationConfigs.Count)
+            throw new ArgumentException($"Number of generation configs ({generationConfigs.Count}) " +
+                                        $"must match number of visualization configs ({visualizationConfigs.Count})");
+
         var results = new List<string>();
         
-        foreach (var config in configs)
+        for (var i = 0; i < generationConfigs.Count; i++)
         {
             try
             {
-                var filePath = Generate(config);
+                var filePath = Generate(generationConfigs[i], visualizationConfigs[i]);
                 results.Add(filePath);
             }
             catch (Exception ex)
             {
-                results.Add($"ERROR for {config.OutputFileName}: {ex.Message}");
+                results.Add($"ERROR for {visualizationConfigs[i].OutputFileName}: {ex.Message}");
             }
         }
         

@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace TagsCloudVisualization;
 
@@ -8,25 +9,23 @@ public class TagCloudVisualizer : IVisualizer
     private const int DefaultHeight = 600;
     private const int Padding = 200;
     
-    private readonly TagCloudVisualizeConfig _config;
     private readonly IImageSaver _imageSaver;
 
-    public TagCloudVisualizer(TagCloudVisualizeConfig config, IImageSaver imageSaver)
+    public TagCloudVisualizer(IImageSaver imageSaver)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
         _imageSaver = imageSaver ?? throw new ArgumentNullException(nameof(imageSaver));
     }
 
-    public Bitmap CreateVisualization(IEnumerable<Rectangle> rectangles, Point center, Size? imageSize = null)
+    public Bitmap CreateVisualization(IEnumerable<Rectangle> rectangles, Point center, TagCloudVisualizationConfig config)
     {
-        var actualImageSize = imageSize ?? CalculateOptimalImageSize(rectangles);
+        var actualImageSize = config.ImageSize ?? CalculateOptimalImageSize(rectangles);
         var bitmap = new Bitmap(actualImageSize.Width, actualImageSize.Height);
         using var graphics = Graphics.FromImage(bitmap);
         
-        graphics.Clear(_config.BackgroundColor);
+        graphics.Clear(config.BackgroundColor);
         
-        using var pen = new Pen(_config.RectangleColor, _config.PenWidth);
-        using var brush = new SolidBrush(Color.FromArgb(_config.RectangleFillAlpha, _config.RectangleColor));
+        using var pen = new Pen(config.RectangleColor, config.PenWidth);
+        using var brush = new SolidBrush(Color.FromArgb(config.RectangleFillAlpha, config.RectangleColor));
         
         foreach (var rectangle in rectangles)
         {
@@ -34,21 +33,21 @@ public class TagCloudVisualizer : IVisualizer
             graphics.DrawRectangle(pen, rectangle);
         }
         
-        using var centerBrush = new SolidBrush(_config.CenterColor);
+        using var centerBrush = new SolidBrush(config.CenterColor);
         var centerRect = new Rectangle(
-            center.X - _config.CenterPointSize / 2, 
-            center.Y - _config.CenterPointSize / 2, 
-            _config.CenterPointSize, 
-            _config.CenterPointSize);
+            center.X - config.CenterPointSize / 2, 
+            center.Y - config.CenterPointSize / 2, 
+            config.CenterPointSize, 
+            config.CenterPointSize);
         graphics.FillEllipse(centerBrush, centerRect);
         
         return bitmap;
     }
 
-    public string SaveVisualization(IEnumerable<Rectangle> rectangles, Point center, string fileName, Size? imageSize = null)
+    public string SaveVisualization(IEnumerable<Rectangle> rectangles, Point center, TagCloudVisualizationConfig config)
     {
-        using var bitmap = CreateVisualization(rectangles, center, imageSize);
-        return _imageSaver.SaveBitmap(bitmap, fileName);
+        using var bitmap = CreateVisualization(rectangles, center, config);
+        return _imageSaver.SaveBitmap(bitmap, config.OutputFileName);
     }
 
     private Size CalculateOptimalImageSize(IEnumerable<Rectangle> rectangles)
