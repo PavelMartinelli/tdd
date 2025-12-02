@@ -16,7 +16,7 @@ public class CircularCloudLayouterTests
     public void SetUp()
     {
         center = new Point(100, 100);
-        layouter = new CircularCloudLayouter(center);
+        layouter = new CircularCloudLayouter(center, new SpiralPointsProvider());
         imageSaver = new ImageSaver("test_results");
         testVisualizer = new TagCloudVisualizer(imageSaver);
     }

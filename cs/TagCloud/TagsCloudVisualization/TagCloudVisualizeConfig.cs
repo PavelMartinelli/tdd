@@ -4,14 +4,14 @@ namespace TagsCloudVisualization;
 
 public class TagCloudVisualizationConfig
 {
-    public string OutputFileName { get; }
-    public Size? ImageSize { get; }
-    public Color BackgroundColor { get; }
-    public Color RectangleColor { get; }
-    public Color CenterColor { get; }
-    public int PenWidth { get; }
-    public int CenterPointSize { get; }
-    public int RectangleFillAlpha { get; }
+    public string OutputFileName { get; set; }
+    public Size? ImageSize { get; set; }
+    public Color BackgroundColor { get; set; }
+    public Color RectangleColor { get; set; }
+    public Color CenterColor { get; set; }
+    public int PenWidth { get; set; }
+    public int CenterPointSize { get; set; }
+    public int RectangleFillAlpha { get; set; }
 
     public TagCloudVisualizationConfig(
         string outputFileName,

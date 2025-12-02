@@ -7,14 +7,11 @@ public class CircularCloudLayouter : ILayouter
     private readonly List<Rectangle> _placedRectangles;
     private readonly ISpiralPointsProvider _pointsProvider;
     private int _minDimension;
-
-    public CircularCloudLayouter(Point center) : this(center, new SpiralPointsProvider())
-    { }
-
+    
     public CircularCloudLayouter(Point center, ISpiralPointsProvider pointsProvider)
     {
         _center = center;
-        _placedRectangles = new List<Rectangle>();
+        _placedRectangles = [];
         _pointsProvider = pointsProvider;
         _minDimension = int.MaxValue;
     }
