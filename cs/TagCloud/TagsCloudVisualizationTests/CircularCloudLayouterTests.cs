@@ -11,14 +11,16 @@ public class CircularCloudLayouterTests
     private Point center;
     private TagCloudVisualizer testVisualizer;
     private IImageSaver imageSaver;
+    private List<Rectangle> placedRectangles;
 
     [SetUp]
     public void SetUp()
     {
         center = new Point(100, 100);
-        layouter = new CircularCloudLayouter(center, new SpiralPointsProvider());
+        layouter = new CircularCloudLayouter(center, new SpiralPointsProvider(center));
         imageSaver = new ImageSaver("test_results");
         testVisualizer = new TagCloudVisualizer(imageSaver);
+        placedRectangles = [];
     }
     
     [TearDown]
@@ -34,7 +36,7 @@ public class CircularCloudLayouterTests
             var config = new TagCloudVisualizationConfig(fileName);
             
             var filePath = testVisualizer.SaveVisualization(
-                layouter.PlacedRectangles, 
+                placedRectangles, 
                 center, 
                 config
             );
@@ -53,6 +55,7 @@ public class CircularCloudLayouterTests
         var size = new Size(10, 10);
         
         var actual = layouter.PutNextRectangle(size);
+        placedRectangles.Add(actual);
         
         var expected = new Rectangle(
             new Point(center.X - size.Width / 2, center.Y - size.Height / 2), 
@@ -64,31 +67,48 @@ public class CircularCloudLayouterTests
     public void PutNextRectangle_MultipleRectangles_DoNotIntersect()
     {
         for (var i = 0; i < 5; i++)
-            layouter.PutNextRectangle(new Size(45, 15));
+        {
+            var rectangle = layouter.PutNextRectangle(new Size(45, 15));
+            placedRectangles.Add(rectangle);
+        }
         
-        var rectangles = layouter.PlacedRectangles;
-        rectangles.Should().NotBeEmpty();
+        placedRectangles.Should().NotBeEmpty();
         
-        for (var i = 0; i < rectangles.Count; i++)
-            for (var j = i + 1; j < rectangles.Count; j++)
-                rectangles[i].IntersectsWith(rectangles[j]).Should().BeFalse();
+        for (var i = 0; i < placedRectangles.Count; i++)
+            for (var j = i + 1; j < placedRectangles.Count; j++)
+                placedRectangles[i].IntersectsWith(placedRectangles[j]).Should().BeFalse();
     }
 
     [Test]
     public void PutNextRectangle_ManyRectangles_LayoutIsDense()
     {
-        for (var i = 0; i < 50; i++)
-            layouter.PutNextRectangle(new Size(45, 15));
+        var sizes = new[]
+        {
+            new Size(60, 20),
+            new Size(45, 15),
+            new Size(30, 10),
+            new Size(20, 40),
+            new Size(15, 5)
+        };
         
-        const double minDensityRatio = 0.3;
-        
-        var totalRectanglesArea = layouter.PlacedRectangles
+        var random = new Random(42);
+        for (var i = 0; i < 200; i++)
+        {
+            var size = sizes[random.Next(sizes.Length)];
+            var rectangle = layouter.PutNextRectangle(size);
+            placedRectangles.Add(rectangle);
+        }
+    
+        const double minDensityRatio = 0.6;
+    
+        var totalRectanglesArea = placedRectangles
             .Sum(rectangle => rectangle.Width * rectangle.Height);
         
-        var boundingCircleRadius = CalculateBoundingCircleRadius();
+        var boundingCircleRadius = CalculateBoundingCircleRadius(placedRectangles);
         var boundingCircleArea = Math.PI * boundingCircleRadius * boundingCircleRadius;
         
         var density = totalRectanglesArea / boundingCircleArea;
+        TestContext.Out.WriteLine($"Actual density: {density:F3}");
         density.Should().BeGreaterThan(minDensityRatio);
     }
     
@@ -96,13 +116,14 @@ public class CircularCloudLayouterTests
     public void PutNextRectangle_ManyRectangles_RectanglesInAllQuadrants()
     {
         for (var i = 0; i < 150; i++)
-            layouter.PutNextRectangle(new Size(45, 15));
+        {
+            var rectangle = layouter.PutNextRectangle(new Size(45, 15));
+            placedRectangles.Add(rectangle);
+        }
 
-        var rectangles = layouter.PlacedRectangles;
-        
         var quadrants = new int[4];
 
-        foreach (var rect in rectangles)
+        foreach (var rect in placedRectangles)
         {
             var rectCenter = new Point(rect.X + rect.Width / 2,
                 rect.Y + rect.Height / 2);
@@ -125,13 +146,14 @@ public class CircularCloudLayouterTests
     public void PutNextRectangle_ManyRectangles_DistributionIsRelativelyUniform()
     {
         for (var i = 0; i < 150; i++)
-            layouter.PutNextRectangle(new Size(45, 15));
-        
-        var rectangles = layouter.PlacedRectangles;
+        {
+            var rectangle = layouter.PutNextRectangle(new Size(45, 15));
+            placedRectangles.Add(rectangle);
+        }
         
         var quadrants = new int[4];
     
-        foreach (var rect in rectangles)
+        foreach (var rect in placedRectangles)
         {
             var rectCenter = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
             
@@ -154,9 +176,9 @@ public class CircularCloudLayouterTests
         TestContext.Out.WriteLine($"Максимум: {maxCount}, Минимум: {minCount}, Отношение: {(double)maxCount / minCount:F2}");
     }
 
-    private double CalculateBoundingCircleRadius()
+    private double CalculateBoundingCircleRadius(List<Rectangle> rectangles)
     {
-        return layouter.PlacedRectangles
+        return rectangles
             .SelectMany(rect => new[]
             {
                 GetDistance(rect.Location, center),

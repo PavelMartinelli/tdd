@@ -23,16 +23,14 @@ public class TagCloudGenerator
         var layouter = _layouterFactory(generationConfig.Center);
         var sizes = _sizeProvider.GetSizes(generationConfig.RectangleCount, generationConfig.MinSize, generationConfig.MaxSize);
         
-        foreach (var size in sizes)
-            layouter.PutNextRectangle(size);
+        var placedRectangles = sizes.Select(size => layouter.PutNextRectangle(size));
         
         return _visualizer.SaveVisualization(
-            rectangles: layouter.PlacedRectangles,
+            rectangles: placedRectangles,
             center: generationConfig.Center,
             config: visualizationConfig
         );
     }
-    
     
     public List<string> GenerateMultiple(
         List<TagCloudGenerationConfig> generationConfigs,

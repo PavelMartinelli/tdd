@@ -9,8 +9,10 @@ class Program
         var imageSaver = new ImageSaver();
         var visualizer = new TagCloudVisualizer(imageSaver);
         var sizeProvider = new RandomRectangleSizeProvider();
-        var layouterFactory = (Point center) => new CircularCloudLayouter(center, new SpiralPointsProvider());
         
+        var layouterFactory = (Point center) =>
+            new CircularCloudLayouter(center, new SpiralPointsProvider(center));
+
         var tagCloudGenerator = new TagCloudGenerator(
             visualizer,
             layouterFactory,

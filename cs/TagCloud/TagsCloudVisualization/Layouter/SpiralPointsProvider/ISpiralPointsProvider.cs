@@ -4,5 +4,5 @@ namespace TagsCloudVisualization;
 
 public interface ISpiralPointsProvider
 {
-    IEnumerable<Point> GetSpiralPoints(Point center, int minDimension);
+    IEnumerable<Point> GetSpiralPoints(int minDimension);
 }

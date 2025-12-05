@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
-using TagsCloudVisualization;
+
+namespace TagsCloudVisualization;
 
 public class CircularCloudLayouter : ILayouter
 {
@@ -16,8 +17,6 @@ public class CircularCloudLayouter : ILayouter
         _minDimension = int.MaxValue;
     }
 
-    public IReadOnlyList<Rectangle> PlacedRectangles => _placedRectangles.AsReadOnly();
-
     public Rectangle PutNextRectangle(Size rectangleSize)
     {
         if (rectangleSize.Width <= 0 || rectangleSize.Height <= 0)
@@ -25,14 +24,14 @@ public class CircularCloudLayouter : ILayouter
 
         UpdateMinDimension(rectangleSize);
         
-        foreach (var point in _pointsProvider.GetSpiralPoints(_center, _minDimension))
+        foreach (var point in _pointsProvider.GetSpiralPoints(_minDimension))
         {
             var candidateRectangle = CreateRectangleAtPoint(rectangleSize, point);
 
             if (IntersectsWithAny(candidateRectangle)) 
                 continue;
             
-            CompactRectangle(ref candidateRectangle);
+            candidateRectangle = CompactRectangle(candidateRectangle);
             _placedRectangles.Add(candidateRectangle);
             return candidateRectangle;
         }
@@ -54,7 +53,7 @@ public class CircularCloudLayouter : ILayouter
             size.Height);
     }
 
-    private void CompactRectangle(ref Rectangle rectangle)
+    private Rectangle CompactRectangle(Rectangle rectangle)
     {
         var canMove = true;
 
@@ -64,11 +63,15 @@ public class CircularCloudLayouter : ILayouter
             var movedY = TryMoveTowardsCenter(ref rectangle, Axis.Y);
             canMove = movedX || movedY;
         }
+
+        return rectangle;
     }
 
     private bool TryMoveTowardsCenter(ref Rectangle rectangle, Axis axis)
     {
-        var centerCoord = axis == Axis.X ? rectangle.X + rectangle.Width / 2 : rectangle.Y + rectangle.Height / 2;
+        var centerCoord = axis == Axis.X
+            ? rectangle.X + rectangle.Width / 2
+            : rectangle.Y + rectangle.Height / 2;
         
         var targetCoord = axis == Axis.X ? _center.X : _center.Y;
         var direction = Math.Sign(targetCoord - centerCoord);
@@ -91,7 +94,12 @@ public class CircularCloudLayouter : ILayouter
 
     private bool IntersectsWithAny(Rectangle rectangle)
     {
-        return _placedRectangles.Any(rect => rect.IntersectsWith(rectangle));
+        for (var i = _placedRectangles.Count - 1; i >= 0; i--)
+        {
+            if (_placedRectangles[i].IntersectsWith(rectangle))
+                return true;
+        }
+        return false;
     }
 
     private enum Axis { X, Y }
