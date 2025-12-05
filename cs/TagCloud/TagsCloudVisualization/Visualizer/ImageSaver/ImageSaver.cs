@@ -11,12 +11,6 @@ public class ImageSaver : IImageSaver
     {
         _relativeOutputDirectory = relativeOutputDirectory;
     }
-    
-    public string GenerateFileName(string baseName)
-    {
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        return $"{baseName}_{timestamp}.png";
-    }
 
     public string SaveBitmap(Bitmap bitmap, string fileName, ImageFormat format = null)
     {

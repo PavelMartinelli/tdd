@@ -29,7 +29,9 @@ public class CircularCloudLayouterTests
         try
         {
             var testName = TestContext.CurrentContext.Test.Name;
-            var config = new TagCloudVisualizationConfig(imageSaver.GenerateFileName(testName));
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var fileName = $"{testName}_{timestamp}.png";
+            var config = new TagCloudVisualizationConfig(fileName);
             
             var filePath = testVisualizer.SaveVisualization(
                 layouter.PlacedRectangles, 
